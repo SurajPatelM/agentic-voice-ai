@@ -55,6 +55,23 @@ Per [Vapi custom tools troubleshooting](https://docs.vapi.ai/tools/custom-tools-
 3. In Vapi call logs, confirm **tool-calls** hit your Server URL and return **results** (not “no result returned”).
 4. Optional: dial your Kyron number **inbound** after a web chat; assistant should use `assistant-request` `firstMessage` only; tools should still work if configured on the assistant.
 
+
+## 7. Webhook Security
+
+The Vapi webhook can execute backend actions such as appointment booking and sending notifications.
+
+For secure deployments:
+
+- Use HTTPS for all webhook communication.
+- Authenticate incoming webhook requests using Vapi Custom Credentials.
+- Validate tool names, required parameters, and permitted actions before execution.
+- Restrict tool execution to supported scheduling and information workflows.
+- Avoid logging sensitive patient information, API keys, and authentication tokens.
+- Prevent duplicate booking and notification actions during retries.
+
+**Note:** The application currently uses simulated healthcare data and in-memory storage. It is not intended for processing real protected health information without additional security and compliance controls.
+
+
 ## References
 
 - [Server events (tool-calls)](https://docs.vapi.ai/server-url/events)
