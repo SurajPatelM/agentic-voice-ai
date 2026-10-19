@@ -1,147 +1,245 @@
-# Kyron Medical - Patient Voice AI
+# Agentic Voice AI
 
-Production-ready Next.js app for a patient assistant that supports:
+**An LLM-powered conversational healthcare assistant for intelligent patient scheduling, voice interactions, and automated appointment workflows.**
 
-- Intelligent web chat (Claude + tool calling)
-- Appointment scheduling with specialist matching and slot selection
-- Prescription refill status workflow (simulated)
-- Office info workflow (hours, address, contact)
-- Outbound and inbound voice continuity via Vapi
-- Email confirmations via Resend
-- SMS confirmations via Twilio (opt-in flow)
-- Dashboard view of booked appointments
+Agentic Voice AI is a full-stack application built with Next.js, TypeScript, Anthropic Claude, and Vapi. It uses **LLM tool calling and structured workflow orchestration** to manage patient interactions across web chat and voice channels.
 
-## What is implemented
+The system supports multi-step appointment scheduling, specialist matching, slot selection from simulated availability, and automated notifications while maintaining conversational context during chat-to-voice transitions.
 
-### Core patient workflows
+## Key Features
 
-- Intake for appointment scheduling: first name, last name, DOB, phone, email, reason
-- Doctor matching based on concern/body part
-- Available slot retrieval with day/time preference support
-- Booking confirmation with conflict handling (`alreadyBooked` response)
-- Safe post-booking behavior to avoid duplicate booking attempts
-- Office info and prescription status support in the same assistant
+### 1. Agentic AI & Conversational Workflows
 
-### Voice handoff and continuity
+- **LLM-powered reasoning:** Uses Claude with structured function calling to interpret patient requests and execute domain-specific actions.
+- **Multi-step orchestration:** Coordinates patient intake, specialist matching, availability retrieval, and appointment booking.
+- **Context-aware interactions:** Maintains session context across successive tool executions.
+- **Workflow guardrails:** Restricts the agent to supported scheduling, office information, and simulated prescription-status tasks.
 
-- "Continue via Phone Call" button from chat UI
-- Outbound call initiation via `POST /api/vapi/call`
-- Session phone indexing so voice tool-calls resolve the same chat session
-- Vapi webhook parsing for both `toolCallList` and `toolWithToolCallList`
-- Single-line tool result formatting and HTTP 200 tool response contract
-- Inbound callback personalization via `assistant-request` first message
+### 2. Intelligent Appointment Scheduling
 
-### Notifications
+- Collects patient details including name, date of birth, contact information, and reason for visit.
+- Matches patients with appropriate specialists based on reported concerns.
+- Retrieves available appointment slots based on preferred dates and times.
+- Handles booking conflicts using structured `alreadyBooked` responses.
+- Prevents duplicate booking attempts after successful confirmation.
+- Exposes appointment records through a dedicated dashboard API.
+- Generates simulated appointment availability for 45 days.
 
-- Email confirmation after successful booking
-- SMS reminder tool (`send_sms_reminder`) for explicit opt-in
-- Twilio sender uses `TWILIO_PHONE_NUMBER`
+### 3. Conversational Voice AI
 
-### UI and UX
+- Integrates **Vapi** for outbound and inbound voice interactions.
+- Supports chat-to-voice handoff via a "Continue via Phone Call" action.
+- Associates voice tool calls with existing chat sessions using phone-based session indexing.
+- Handles Vapi webhook payloads in `toolCallList` and `toolWithToolCallList` formats.
+- Personalizes inbound callbacks using session context.
 
-- Liquid glass visual style with Kyron color palette
-- Animated chat/message interactions
-- Dashboard reads fresh appointments from `/api/appointments` with `no-store`
+### 4. Automated Notifications
 
-### Safety and guardrails
+- Sends booking confirmation emails through **Resend**.
+- Supports opt-in SMS reminders through **Twilio**.
+- Triggers notifications through structured tool workflows.
 
-- System prompts instruct the assistant to avoid medical advice
-- Tool flow constrained to scheduling/info/refill domain tasks
+### 5. Appointment Dashboard
 
-## Tech stack
+- Displays scheduled appointments using a Next.js dashboard.
+- Retrieves current appointment data from `/api/appointments`.
+- Uses `no-store` fetching to avoid stale dashboard responses.
+- Provides an interactive chat interface with animated messaging components.
 
-- Next.js 16 (App Router), React 19, TypeScript
-- Anthropic Claude (`claude-sonnet-4-20250514`)
-- Vapi (voice calls + webhook tool execution)
-- Resend (email), Twilio (SMS)
-- Tailwind CSS 4
+## System Architecture
 
-## Project structure
+The application follows a tool-augmented conversational AI architecture:
 
-- `src/app/page.tsx` - Chat experience
-- `src/app/dashboard/page.tsx` - Appointment dashboard
-- `src/app/api/chat/route.ts` - Claude tool loop + chat API
-- `src/app/api/vapi/call/route.ts` - Outbound call initiation
-- `src/app/api/vapi/webhook/route.ts` - Vapi server webhook events/tool-calls
-- `src/app/api/appointments/route.ts` - Appointment API for dashboard
-- `src/data/doctors.ts` - Hard-coded providers + generated slots (45 days)
-- `src/data/store.ts` - In-memory sessions + appointments
-- `src/lib/claude.ts` - Prompt + tool schemas
-- `src/lib/chat-tools.ts` - Tool handlers (`match_doctor`, `book_appointment`, etc.)
-- `src/lib/vapi-webhook.ts` - Tool-call payload normalization helpers
-- `src/lib/vapi-tools.ts` - Export OpenAI-style function definitions for Vapi
-- `src/lib/email.ts` / `src/lib/sms.ts` - Notifications
+```text
+Patient
+   |
+   +---- Web Chat (Next.js)
+   |          |
+   |          v
+   |     Claude LLM
+   |          |
+   |     Tool Calling Loop
+   |          |
+   |          +---- Patient Intake
+   |          +---- Specialist Matching
+   |          +---- Slot Availability
+   |          +---- Appointment Booking
+   |          +---- Office Information
+   |          +---- Prescription Status
+   |
+   +---- Voice AI (Vapi)
+              |
+              v
+        Webhook Handler
+              |
+        Session Resolution
+              |
+        Shared Scheduling Tools
+              |
+              v
+       Appointment Store
+              |
+              +---- Email (Resend)
+              +---- SMS (Twilio)
+              +---- Appointment Dashboard
+```
 
-## Initial setup (local)
+### Architecture Highlights
 
-### 1) Prerequisites
+- Claude handles conversational reasoning and structured tool selection for web chat.
+- Vapi manages voice interactions and forwards tool execution requests to the backend.
+- Both interfaces use the application's scheduling tools.
+- Session indexing supports contextual continuity between chat and voice.
+- Appointments and session records are currently held in memory.
+
+## Technology Stack
+
+| Category | Technologies |
+|---|---|
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
+| LLM | Anthropic Claude Sonnet 4 |
+| Agentic Workflows | LLM Tool Calling, Function Schemas, Tool Orchestration |
+| Voice AI | Vapi, Voice Webhooks |
+| Notifications | Resend, Twilio |
+| Backend | Next.js App Router, Server Routes, REST APIs |
+| Deployment Documentation | AWS EC2, Nginx, PM2, HTTPS |
+| State Management | In-memory sessions and appointment storage |
+
+## Project Structure
+
+```text
+src/
+├── app/
+│   ├── page.tsx                 # Conversational chat interface
+│   ├── dashboard/
+│   │   └── page.tsx            # Appointment dashboard
+│   └── api/
+│       ├── chat/route.ts       # Claude tool-calling loop
+│       ├── appointments/route.ts
+│       └── vapi/
+│           ├── call/route.ts   # Outbound voice calls
+│           └── webhook/route.ts
+├── data/
+│   ├── doctors.ts              # Simulated providers and slots
+│   └── store.ts                # In-memory data storage
+└── lib/
+    ├── claude.ts               # System prompt and tool schemas
+    ├── chat-tools.ts           # Scheduling tool implementations
+    ├── vapi-webhook.ts         # Webhook payload normalization
+    ├── vapi-tools.ts           # Voice function definitions
+    ├── email.ts                # Email notifications
+    └── sms.ts                  # SMS notifications
+```
+
+## Getting Started
+
+### Prerequisites
 
 - Node.js 20+
 - npm 10+
+- Anthropic API key
+- Optional Vapi, Resend, and Twilio credentials for integrations
 
-### 2) Install
+### 1. Clone the Repository
 
 ```bash
-git clone <your-repo-url>
-cd kyron-patient-ai
+git clone https://github.com/SurajPatelM/agentic-voice-ai.git
+cd agentic-voice-ai
 npm install
 ```
 
-### 3) Environment
+### 2. Configure Environment Variables
 
 ```bash
 cp .env.example .env.local
 ```
 
-Fill `.env.local` with your keys:
+Configure the appropriate credentials in `.env.local`:
 
-- `ANTHROPIC_API_KEY` (required)
-- `VAPI_API_KEY`, `VAPI_PHONE_NUMBER_ID`, `VAPI_ASSISTANT_ID` (voice)
-- `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (email)
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` (SMS)
-- `NEXT_PUBLIC_APP_URL` (e.g. `http://localhost:3000` locally)
+| Variable | Purpose |
+|---|---|
+| `ANTHROPIC_API_KEY` | Claude LLM access |
+| `VAPI_API_KEY` | Voice API authentication |
+| `VAPI_PHONE_NUMBER_ID` | Configured Vapi phone number |
+| `VAPI_ASSISTANT_ID` | Voice assistant configuration |
+| `RESEND_API_KEY` | Email notification service |
+| `RESEND_FROM_EMAIL` | Verified sender address |
+| `TWILIO_ACCOUNT_SID` | Twilio account identifier |
+| `TWILIO_AUTH_TOKEN` | SMS authentication |
+| `TWILIO_PHONE_NUMBER` | SMS sender phone number |
+| `NEXT_PUBLIC_APP_URL` | Application base URL |
 
-### 4) Run
+**Security:** Never commit `.env.local`, credentials, tokens, or patient-identifying data.
+
+### 3. Run Locally
 
 ```bash
 npm run dev
 ```
 
-Open:
+Open the application:
 
-- Chat: `http://localhost:3000`
-- Dashboard: `http://localhost:3000/dashboard`
+- **Chat interface:** http://localhost:3000
+- **Appointment dashboard:** http://localhost:3000/dashboard
 
-## Run scripts
+### 4. Build and Validate
 
-- `npm run dev` - local development
-- `npm run build` - production build
-- `npm run start` - run built app
-- `npm run lint` - lint checks
+```bash
+npm run lint
+npm run build
+npm run start
+```
 
-## Vapi setup (required for voice scheduling)
+## Voice Integration
 
-See `VAPI_SETUP.md` for complete instructions.
+The voice workflow requires Vapi configuration.
 
-Minimum required:
+1. Configure the assistant's server URL to point to your public webhook endpoint:
 
-1. Set assistant Server URL to `https://YOUR_DOMAIN/api/vapi/webhook`
-2. Ensure assistant function names/schemas match `getClaudeTools()` / `getVapiModelFunctions()`
-3. Keep tools sync (`async: false`) and verify logs return `results` for tool-calls
+   `https://YOUR_DOMAIN/api/vapi/webhook`
+
+2. Ensure the voice function schemas match those defined in `getClaudeTools()` and `getVapiModelFunctions()`.
+
+3. Configure synchronous tool execution (`async: false`).
+
+4. Verify that webhook requests return successful HTTP responses containing the required tool `results` structure.
+
+5. Test outbound initiation and inbound callback personalization.
+
+See **[VAPI_SETUP.md](VAPI_SETUP.md)** for detailed configuration.
 
 ## Deployment
 
-For AWS EC2 + HTTPS + Nginx + PM2:
+The repository includes deployment instructions for:
 
-- `DEPLOY_EC2.md`
+- AWS EC2 hosting
+- Nginx reverse proxy
+- HTTPS configuration
+- PM2 process management
 
-## Important notes
+See **[DEPLOY_EC2.md](DEPLOY_EC2.md)** for deployment steps.
 
-- State is currently in-memory per Node process.
-  - Restarting the server clears sessions/appointments.
-  - For production-grade persistence, move to a database.
-- Never commit `.env.local` or API keys.
+A successful production build does not by itself make the application ready for use with real patient information.
+
+## Safety & Current Limitations
+
+This project is a **functional engineering prototype**, not a clinical system or production healthcare platform.
+
+- **Simulated healthcare data:** Providers, scheduling availability, and prescription-refill status are simulated.
+- **In-memory persistence:** Appointment and session records are stored within a Node.js process and are lost when the process restarts.
+- **No medical advice:** The agent is instructed to stay within scheduling, office-information, and simulated refill-status workflows.
+- **External service dependencies:** Voice calls, email delivery, and SMS require valid third-party service credentials and configuration.
+- **Healthcare privacy:** This implementation has not been established as HIPAA-compliant. It should not process real protected health information without appropriate authentication, access controls, durable storage, encryption, audit logging, and compliance review.
+
+### Potential Future Improvements
+
+- Database-backed appointment and session persistence
+- Authentication and role-based access control
+- Structured observability and tracing
+- Automated end-to-end agent evaluation
+- Stronger recovery from failed tool executions
+- Improved concurrent booking and scheduling safeguards
 
 ## License
 
-Private use.
+Private use. No open-source license is granted unless a license file is added to the repository.
